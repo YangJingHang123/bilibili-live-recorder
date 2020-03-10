@@ -32,7 +32,7 @@ class BiliBiliLive(BaseLive):
             'quality': 0,
             'platform': 'web'
         }).json()
-        best_quality=stream_info['data']['accept_quality'][0][0]
+        best_quality = stream_info['data']['accept_quality'][0][0]
         stream_info = self.common_request('GET', url, {
             'cid': self.room_id,
             'otype': 'json',
