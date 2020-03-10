@@ -1,11 +1,13 @@
 from Live import BiliBiliLive
 import os
+import subprocess
 import sys
 import requests
 import time
 import config
 import utils
 import multiprocessing
+from update import update
 
 NOT_START = 0
 RECORDING = 1
@@ -30,7 +32,6 @@ class BiliBiliLiveRecorder(BiliBiliLive):
                 self.print(self.room_id, room_info['roomname'])
                 return self.get_live_urls()
             else:
-                self.print(self.room_id, '等待开播')
                 if not blocking:
                     return None  # need refactor
         except Exception as e:
@@ -43,7 +44,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
             headers['Accept-Encoding'] = 'identity'
             headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko'
             resp = requests.get(record_url, stream=True, headers=headers)
-            with open(output_filename, "wb+") as f:
+            with open(output_filename, "ab+") as f:
                 for chunk in resp.iter_content(chunk_size=1024):
                     f.write(chunk) if chunk else None
                     f.flush()
@@ -58,6 +59,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
                 urls = self.check(interval=self.check_interval, blocking=False)
 
                 if urls is None and status == NOT_START:  # just wait
+                    self.print(self.room_id, '等待开播')
                     time.sleep(self.check_interval)
 
                 if urls and status == NOT_START:  # start recording
@@ -73,17 +75,26 @@ class BiliBiliLiveRecorder(BiliBiliLive):
                 if urls is None and status == RECORDING:  # stream end
                     self.print(self.room_id, '录制完成' + c_filename)
                     status = self.next_status(status, True)
+                    subprocess.run(
+                        'ffmpeg -y -i {c_filename} -c:a copy -c:v copy {final_name}'.format(c_filename=c_filename, final_name=c_filename.split('.')[0]+'_final.mp4'),
+                        shell=True,
+                        stderr=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL)
+                    print("ffmpeg done.")
                     try:
                         if callable(self.on_stop):
-                            self.on_stop(c_filename)  # callback
+                            self.on_stop(c_filename.split('.')[
+                                         0]+'_final.mp4')  # callback
                         elif self.on_stop is not None:
                             raise NotcallableError('on_stop is not callable')
                     except Exception as e:
-                        self.print(self.room_id, 'Error while calling on_stop callback' + str(e))
+                        self.print(
+                            self.room_id, 'Error while calling on_stop callback' + str(e))
 
             except Exception as e:
-                self.print(self.room_id, 'Error while checking or recording:' + str(e))
-                self.next_status(status)
+                self.print(
+                    self.room_id, 'Error while checking or recording:' + str(e))
+                status = self.next_status(status, False)
 
 
 if __name__ == '__main__':
@@ -100,7 +111,8 @@ if __name__ == '__main__':
         os.mkdir(file_path)
 
     mp = multiprocessing.Process
-    tasks = [mp(target=BiliBiliLiveRecorder(room_id).run) for room_id in input_id]
+    tasks = [mp(target=BiliBiliLiveRecorder(room_id, on_stop=update).run)
+             for room_id in input_id]
     for i in tasks:
         i.start()
     for i in tasks:
