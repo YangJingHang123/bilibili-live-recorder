@@ -43,7 +43,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
             headers['Accept-Encoding'] = 'identity'
             headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko'
             resp = requests.get(record_url, stream=True, headers=headers)
-            with open(output_filename, "wb") as f:
+            with open(output_filename, "wb+") as f:
                 for chunk in resp.iter_content(chunk_size=1024):
                     f.write(chunk) if chunk else None
                     f.flush()
@@ -61,7 +61,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
                     time.sleep(self.check_interval)
 
                 if urls and status == NOT_START:  # start recording
-                    self.next_status(status, True)
+                    status = self.next_status(status, True)
                     filename = utils.generate_filename(self.room_id)
                     c_filename = os.path.join(os.getcwd(), 'files', filename)
                     self.print(self.room_id, '开始录制' + c_filename)
@@ -72,7 +72,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
 
                 if urls is None and status == RECORDING:  # stream end
                     self.print(self.room_id, '录制完成' + c_filename)
-                    self.next_status(status, True)
+                    status = self.next_status(status, True)
                     try:
                         if callable(self.on_stop):
                             self.on_stop(c_filename)  # callback
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     elif len(sys.argv) == 1:
         input_id = config.rooms
     else:
-        raise ZeroDivisionError('请检查输入的命令是否正确 例如：python3 run.py 10086')
+        raise ValueError('请检查输入的命令是否正确 例如：python3 run.py 10086')
 
     file_path = os.path.join(os.getcwd(), 'files')
     if not os.path.exists(file_path):

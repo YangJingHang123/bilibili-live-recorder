@@ -1,2 +1,2 @@
-from .BaseLive import *
-from .BilibiliLive import *
+from .BaseLive import BaseLive
+from .BilibiliLive import BiliBiliLive
