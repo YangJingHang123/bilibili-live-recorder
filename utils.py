@@ -1,6 +1,7 @@
 import time
-import requests
-import config
+
+NOT_START = 0
+RECORDING = 1
 
 
 def get_current_time(time_format):
@@ -21,6 +22,13 @@ def print_log(room_id='None', content='None'):
     time_part = brackets.format(get_current_time('%Y-%m-%d %H:%M:%S'))
     room_part = brackets.format('直播间: ' + room_id)
     print(time_part, room_part, content)
+
+
+def next_status(status, code):
+    if code is True:
+        return (status+1) % 2
+    else:
+        return NOT_START
 
 
 if __name__ == '__main__':
