@@ -24,20 +24,17 @@ class BiliBiliLiveRecorder(BiliBiliLive):
         self.on_stop = on_stop
 
     def check(self, interval, blocking=True):
-        while True:
-            try:
-                room_info = self.get_room_info()
-                if room_info['status']:
-                    self.print(self.room_id, room_info['roomname'])
-                    break
-                else:
-                    self.print(self.room_id, '等待开播')
-                    if not blocking:
-                        return None  # need refactor
-            except Exception as e:
-                self.print(self.room_id, 'Error:' + str(e))
-            time.sleep(interval)
-        return self.get_live_urls()
+        try:
+            room_info = self.get_room_info()
+            if room_info['status']:
+                self.print(self.room_id, room_info['roomname'])
+                return self.get_live_urls()
+            else:
+                self.print(self.room_id, '等待开播')
+                if not blocking:
+                    return None  # need refactor
+        except Exception as e:
+            self.print(self.room_id, 'Error:' + str(e))
 
     def record(self, record_url, output_filename):
         try:
@@ -46,7 +43,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
             headers['Accept-Encoding'] = 'identity'
             headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko'
             resp = requests.get(record_url, stream=True, headers=headers)
-            with open(output_filename, "wb+") as f:
+            with open(output_filename, "wb") as f:
                 for chunk in resp.iter_content(chunk_size=1024):
                     f.write(chunk) if chunk else None
                     f.flush()
