@@ -28,6 +28,7 @@ class BiliBiliLiveRecorder(BiliBiliLive):
     def check(self, interval, blocking=True):
         try:
             room_info = self.get_room_info()
+            print(room_info)
             if room_info['status']:
                 self.print(self.room_id, room_info['roomname'])
                 return self.get_live_urls()

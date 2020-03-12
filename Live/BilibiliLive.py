@@ -31,14 +31,14 @@ class BiliBiliLive(BaseLive):
             'otype': 'json',
             'quality': 0,
             'platform': 'web'
-        }).json()
+            }, proxy={"http": "socks5://127.0.0.1:1080","https": "socks5://127.0.0.1:1080"}).json()
         best_quality = stream_info['data']['accept_quality'][0][0]
         stream_info = self.common_request('GET', url, {
             'cid': self.room_id,
             'otype': 'json',
             'quality': best_quality,
             'platform': 'web'
-        }).json()
+            }, proxy={"http": "socks5://127.0.0.1:1080","https": "socks5://127.0.0.1:1080"}).json()
         for durl in stream_info['data']['durl']:
             live_urls.append(durl['url'])
         return live_urls

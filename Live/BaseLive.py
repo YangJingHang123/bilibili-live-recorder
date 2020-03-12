@@ -15,12 +15,12 @@ class BaseLive:
         self.site_name = ''
         self.site_domain = ''
 
-    def common_request(self, method, url, params=None, data=None):
+    def common_request(self, method, url, params=None, data=None, proxy=None):
         connection = None
         if method == 'GET':
-            connection = self.session.get(url, headers=self.headers, params=params)
+            connection = self.session.get(url, headers=self.headers, params=params, proxies=proxy)
         if method == 'POST':
-            connection = self.session.post(url, headers=self.headers, params=params, data=data)
+            connection = self.session.post(url, headers=self.headers, params=params, data=data, proxies=proxy)
         return connection
 
     def get_room_info(self):
